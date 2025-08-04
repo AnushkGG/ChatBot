@@ -2,30 +2,34 @@
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+import pickle
+import numpy as np
 
 app = FastAPI()
 
-# Allow frontend access (CORS)
+# Enable CORS so frontend can talk to backend
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # for development only
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Load trained model
+with open("crop_model.pkl", "rb") as f:
+    model = pickle.load(f)
+
 @app.get("/")
 def read_root():
-    return {"message": "Chatbot API is running."}
+    return {"message": "Crop Recommendation API running"}
 
-@app.post("/chat")
-async def chat(request: Request):
+@app.post("/recommend")
+async def recommend_crop(request: Request):
     data = await request.json()
-    user_message = data.get("message")
-
-    # Simple rule-based logic
-    if "hello" in user_message.lower():
-        reply = "Hi there! How can I help you today?"
-    else:
-        reply = "I'm still learning. Please try saying 'hello'."
-
-    return {"reply": reply}
+    features = [
+        data["N"], data["P"], data["K"],
+        data["temperature"], data["humidity"],
+        data["ph"], data["rainfall"]
+    ]
+    prediction = model.predict([features])[0]
+    return {"recommended_crop": prediction}

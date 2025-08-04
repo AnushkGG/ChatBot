@@ -1,16 +1,45 @@
+<!-- frontend/index.html -->
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <title>Chatbot</title>
-  <link rel="stylesheet" href="style.css">
+    <title>Crop Advisor</title>
 </head>
 <body>
-  <div id="chatbox">
-    <div id="messages"></div>
-    <input type="text" id="userInput" placeholder="Type your message..." />
-    <button onclick="sendMessage()">Send</button>
-  </div>
-  <script src="script.js"></script>
+    <h2>Crop Recommendation</h2>
+    <form id="crop-form">
+        <label>N: <input type="number" id="N"></label><br>
+        <label>P: <input type="number" id="P"></label><br>
+        <label>K: <input type="number" id="K"></label><br>
+        <label>Temperature: <input type="number" id="temperature"></label><br>
+        <label>Humidity: <input type="number" id="humidity"></label><br>
+        <label>pH: <input type="number" id="ph"></label><br>
+        <label>Rainfall: <input type="number" id="rainfall"></label><br><br>
+        <button type="submit">Get Recommendation</button>
+    </form>
+    <p id="result"></p>
+
+    <script>
+        document.getElementById('crop-form').onsubmit = async function(e) {
+            e.preventDefault();
+            const payload = {
+                N: parseFloat(document.getElementById('N').value),
+                P: parseFloat(document.getElementById('P').value),
+                K: parseFloat(document.getElementById('K').value),
+                temperature: parseFloat(document.getElementById('temperature').value),
+                humidity: parseFloat(document.getElementById('humidity').value),
+                ph: parseFloat(document.getElementById('ph').value),
+                rainfall: parseFloat(document.getElementById('rainfall').value)
+            };
+
+            const response = await fetch("http://127.0.0.1:8000/recommend", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+            document.getElementById('result').innerText = "Recommended crop: " + data.recommended_crop;
+        }
+    </script>
 </body>
 </html>

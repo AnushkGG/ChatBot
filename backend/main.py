@@ -16,7 +16,7 @@ app.add_middleware(
 )
 
 # Load trained model
-with open("crop_model.pkl", "rb") as f:
+with open("backend/crop_model.pkl", "rb") as f:
     model = pickle.load(f)
 
 @app.get("/")

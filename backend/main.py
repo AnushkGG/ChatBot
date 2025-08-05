@@ -1,35 +1,40 @@
-# backend/main.py
-
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-import pickle
-import numpy as np
+import google.generativeai as genai
+import os
+from dotenv import load_dotenv
 
 app = FastAPI()
 
-# Enable CORS so frontend can talk to backend
+load_dotenv(dotenv_path="backend/.env")
+genai.configure(api_key=os.getenv("GEMINI_API_KEY"))
+
+
+
+
+# CORS to allow frontend requests from anywhere (localhost)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["*"],  # or use ["http://127.0.0.1:5500"] if using Live Server
+    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# Load trained model
-with open("backend/crop_model.pkl", "rb") as f:
-    model = pickle.load(f)
+
+model = genai.GenerativeModel("models/gemini-1.5-pro")
 
 @app.get("/")
 def read_root():
-    return {"message": "Crop Recommendation API running"}
+    return {"message": "Gemini Chatbot API running"}
 
-@app.post("/recommend")
-async def recommend_crop(request: Request):
+@app.post("/chat")
+async def chat(request: Request):
     data = await request.json()
-    features = [
-        data["N"], data["P"], data["K"],
-        data["temperature"], data["humidity"],
-        data["ph"], data["rainfall"]
-    ]
-    prediction = model.predict([features])[0]
-    return {"recommended_crop": prediction}
+    user_message = data.get("message")
+
+    try:
+        response = model.generate_content(user_message)
+        return {"reply": response.text}
+    except Exception as e:
+        return {"error": str(e)}
